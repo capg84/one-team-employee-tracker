@@ -3,30 +3,23 @@ const inquirer = require("inquirer");
 const mysql = require("mysql2");
 const consoleTable = require("console.table");
 const asciiArtLogo = require("asciiart-logo");
+const dbConnection = require("./config/connection");
 
-// creating sql database connection
-const dbConnection = mysql.createConnection(
-    {
-      host: 'localhost',
-      port: 3301,
-      user: 'root',
-      password: 'none093rare977',
-      database: 'one_team_employee_db'
-    },
+// const PORT = process.env.PORT || 3001;
 
-  dbConnection.connect(function(err) {
-    if (err) throw err;
+//   dbConnection.connect(function(err) {
+//     if (err) throw err;
    
-    console.log("Connected as ID " + dbConnection.threadId);
-    console.clear();
-    console.log ("============================================");
-    console.log ("");
-    console.log ("   WELCOME TO ONE TEAM EMPLOYEE DATABASE   ");
-    console.log ("");
-    console.log ("============================================");
-    manageOneTeam();
-  }),
-);
+//     console.log("Connected as ID " + dbConnection.threadId);
+//     console.clear();
+//     console.log ("============================================");
+//     console.log ("");
+//     console.log ("   WELCOME TO ONE TEAM EMPLOYEE DATABASE   ");
+//     console.log ("");
+//     console.log ("============================================");
+//     manageOneTeam();
+//   }),
+// );
 
 // creating manageOneTeam function
 function manageOneTeam() {
