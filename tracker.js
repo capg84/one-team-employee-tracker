@@ -106,7 +106,11 @@ function manageOneTeam() {
 
 // viewAllDepartments function
 function viewAllDepartments() {
-    dbConnection.query("SELECT id AS Department_ID, name AS Department FROM departments",
+    dbConnection.query(`
+        SELECT 
+            id AS Department_ID, 
+            name AS Department 
+        FROM departments;`,
     function(err, res) {
       if (err) throw err
       console.log("")
@@ -119,13 +123,159 @@ function viewAllDepartments() {
 
 // viewAllRoles function
 function viewAllRoles() {
-    dbConnection.query("SELECT id AS roles.Role_ID, role_name AS Title, salary as FROM departments",
+    dbConnection.query(`
+        SELECT 
+            r.id as Role_ID, 
+            r.role_name as Title, 
+            d.name as Department, 
+            r.salary as Salary 
+        FROM roles r 
+        JOIN departments d ON d.id = r.department_id Order by r.id asc;`,
     function(err, res) {
       if (err) throw err
       console.log("")
-      console.log("*** LIST OF ALL DEPARTMENTS ***")
+      console.log("*** LIST OF ALL ROLES ***")
       console.log("")
       console.table(res)
       manageOneTeam()
     });
 };
+
+// viewEmployees function
+function viewEmployees() {
+    // options to view employees
+    inquirer.prompt ([
+        {
+        type: "list",
+        massage: "How do you want to view the employees?",
+        name: "action",
+        choices: [
+            "View all employees",
+            "View employees by department",
+            "View employees by manager",
+            "Go back to main menu"
+            ]
+        }
+        ]).then(function(selection){
+            // creating switch based on the selected action
+            switch(selection.action) {
+                // viewAllEmployees function if "View all employees" is selected
+                case "View all employees": 
+                    viewAllEmployees();
+                break;
+
+                // viewEmpByDept function if "View employees by department" is selected
+                case "View employees by department": 
+                    viewEmpByDept();
+                break;
+
+                // viewEmpByManager function if "View employees by manager" is selected
+                case "View employees by manager": 
+                    viewEmpByManager();
+                break;
+
+                // viewEmpByManager function if "View employees by manager" is selected
+                case "Go back to main menu": 
+                    manageOneTeam();
+                break;
+            }
+        }
+    )
+
+    // function to view all employee data, including employee ids, first names, last names, job titles, departments, salaries, and managers that the employees report to
+    function viewAllEmployees() {
+        dbConnection.query(`
+        SELECT 
+            e.id as Employee_ID, 
+            e.first_name as First_Name,
+            e.last_name as Last_Name, 
+            r.role_name as Title,
+            d.name as Department, 
+            r.salary as Salary, 
+            CONCAT(m.first_name, ' ', m.last_name) as Manager
+        FROM employees AS e
+        JOIN roles r on r.id = e.role_id
+        JOIN departments d ON d.id = r.department_id
+        LEFT JOIN employees m on m.manager_id = e.id
+        Order by r.id asc;`,     
+        function(err, res) {
+        if (err) throw err
+        console.log("")
+        console.log("*****************************")
+        console.log("*** LIST OF ALL EMPLOYEES ***")
+        console.log("*****************************")
+        console.log("")
+        console.table(res)
+        viewEmployees()
+        });
+    };
+
+    // function to view all department-wise employee data 
+    function viewEmpByDept() {
+        dbConnection.query(`
+        SELECT 
+            d.name as Department, 
+            e.id as Employee_ID, 
+            e.first_name as First_Name,
+            e.last_name as Last_Name, 
+            r.role_name as Title,
+            r.salary as Salary, 
+            CONCAT(m.first_name, ' ', m.last_name) as Manager
+        FROM employees AS e
+        JOIN roles r on r.id = e.role_id
+        JOIN departments d ON d.id = r.department_id
+        LEFT JOIN employees m on m.manager_id = e.id
+        Order by d.name asc;`,     
+        function(err, res) {
+        if (err) throw err
+        console.log("")
+        console.log("*******************************************")
+        console.log("*** LIST OF ALL EMPLOYEES BY DEPARTMENT ***")
+        console.log("*******************************************")
+        console.log("")
+        console.table(res)
+        viewEmployees()
+        });
+    };
+
+    // function to view manager-wise employee data
+    function viewEmpByManager() {
+        dbConnection.query(`
+        SELECT 
+            CONCAT(m.first_name, ' ', m.last_name) as Manager,             
+            e.id as Employee_ID, 
+            e.first_name as First_Name,
+            e.last_name as Last_Name, 
+            r.role_name as Title,
+            d.name as Department,
+            r.salary as Salary
+        FROM employees AS e
+        JOIN roles r on r.id = e.role_id
+        JOIN departments d ON d.id = r.department_id
+        LEFT JOIN employees m on m.manager_id = e.id
+        Order by Manager asc;`,     
+        function(err, res) {
+        if (err) throw err
+        console.log("")
+        console.log("****************************************")
+        console.log("*** LIST OF ALL EMPLOYEES BY MANAGER ***")
+        console.log("****************************************")
+        console.log("")
+        console.table(res)
+        viewEmployees()
+        });
+    };
+
+};
+
+
+// WHEN I choose to view all employees
+// THEN I am presented with a formatted table showing employee data, including employee ids, first names, last names, job titles, departments, salaries, and managers that the employees report to
+// WHEN I choose to add a department
+// THEN I am prompted to enter the name of the department and that department is added to the database
+// WHEN I choose to add a role
+// THEN I am prompted to enter the name, salary, and department for the role and that role is added to the database
+// WHEN I choose to add an employee
+// THEN I am prompted to enter the employee’s first name, last name, role, and manager, and that employee is added to the database
+// WHEN I choose to update an employee role
+// // THEN I am prompted to select an employee to update and their new role and this information is updated in the database
