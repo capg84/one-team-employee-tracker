@@ -27,8 +27,8 @@ function manageOneTeam() {
     inquirer.prompt ([
         {
         type: "list",
+        name: "action_selection",
         massage: "Please select one option",
-        name: "action",
         choices: [
             "View all departments",
             "View all roles",
@@ -44,7 +44,7 @@ function manageOneTeam() {
         }
         ]).then(function(selection){
             // creating switch based on the selected action
-            switch(selection.action) {
+            switch(selection.action_selection) {
                 // viewAllDepartment function if "View all department" is selected
                 case "View all departments": 
                     viewAllDepartments();
@@ -148,7 +148,7 @@ function viewEmployees() {
         {
         type: "list",
         massage: "How do you want to view the employees?",
-        name: "action",
+        name: "action_selection",
         choices: [
             "View all employees",
             "View employees by department",
@@ -158,7 +158,7 @@ function viewEmployees() {
         }
         ]).then(function(selection){
             // creating switch based on the selected action
-            switch(selection.action) {
+            switch(selection.action_selection) {
                 // viewAllEmployees function if "View all employees" is selected
                 case "View all employees": 
                     viewAllEmployees();
@@ -265,12 +265,31 @@ function viewEmployees() {
         viewEmployees()
         });
     };
-
 };
 
+function departmentAdd() {
+    inquirer.prompt([
+        {type: 'input',
+        name: 'addNewDepartment',
+        message: 'What is the name of the department you need to add?'
+        }
+    ]).then((response)=> {
+        let newDeparmentName = response.addNewDepartment;
+        console.log(newDeparmentName);
+        dbConnection.query(`INSERT INTO departments (name) VALUES ("${newDeparmentName}");`,
+        function(err, res) {
+            if (err) throw err
+            console.log("")
+            console.log("*****************************************")
+            console.log("*** NEW DEPARTMENT SUCCESSFULLY ADDED ***")
+            console.log("*****************************************")
+            console.log("")
+            console.table(res)
+            viewEmployees()
+        });
+    });
+};
 
-// WHEN I choose to view all employees
-// THEN I am presented with a formatted table showing employee data, including employee ids, first names, last names, job titles, departments, salaries, and managers that the employees report to
 // WHEN I choose to add a department
 // THEN I am prompted to enter the name of the department and that department is added to the database
 // WHEN I choose to add a role
