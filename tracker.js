@@ -275,7 +275,7 @@ function departmentAdd() {
         }
     ]).then((response)=> {
         let newDeparmentName = response.addNewDepartment;
-        console.log(newDeparmentName);
+        console.log(`New department: ` + newDeparmentName);
         dbConnection.query(`INSERT INTO departments (name) VALUES ("${newDeparmentName}");`,
         function(err, res) {
             if (err) throw err
@@ -285,15 +285,49 @@ function departmentAdd() {
             console.log("*****************************************")
             console.log("")
             console.table(res)
-            viewEmployees()
+            viewAllDepartments()
         });
     });
 };
 
-// WHEN I choose to add a department
-// THEN I am prompted to enter the name of the department and that department is added to the database
-// WHEN I choose to add a role
-// THEN I am prompted to enter the name, salary, and department for the role and that role is added to the database
+function roleAdd() {
+    inquirer.prompt([
+        {type: 'input',
+        name: 'newRoleName',
+        message: 'What is the name of the role you need to add?'
+        },
+
+        {type: 'input',
+        name: 'newRoleSalary',
+        message: 'What is the salary of the new role?'
+        },
+
+        {type: 'input',
+        name: 'newRoleDept',
+        message: 'Which department does the new role belong to? Please enter DEPARTMENT ID only.'
+        }
+    ]).then((response)=> {
+        let newRoleName = response.newRoleName;
+        let newRoleSalary = response.newRoleSalary;
+        let newRoleDept = response.newRoleDept;
+        console.log(`New role name: `+ newRoleName);
+        console.log(`New role salary: `+ newRoleSalary);
+        console.log(`New role department ID: `+ newRoleDept);
+        dbConnection.query(`INSERT INTO roles (role_name, salary, department_id) VALUES ("${newRoleName}", ${newRoleSalary}, ${newRoleDept});`,
+        function(err, res) {
+            if (err) throw err
+            console.log("")
+            console.log("***********************************")
+            console.log("*** NEW ROLE SUCCESSFULLY ADDED ***")
+            console.log("***********************************")
+            console.log("")
+            console.table(res)
+            viewAllRoles()
+        });
+    });
+}
+
+
 // WHEN I choose to add an employee
 // THEN I am prompted to enter the employee’s first name, last name, role, and manager, and that employee is added to the database
 // WHEN I choose to update an employee role
