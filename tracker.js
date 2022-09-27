@@ -28,7 +28,7 @@ function manageOneTeam() {
         {
         type: "list",
         name: "action_selection",
-        massage: "Please select one option",
+        message: "Please select one option",
         choices: [
             "View all departments",
             "View all roles",
@@ -147,7 +147,7 @@ function viewEmployees() {
     inquirer.prompt ([
         {
         type: "list",
-        massage: "How do you want to view the employees?",
+        message: "How do you want to view the employees?",
         name: "action_selection",
         choices: [
             "View all employees",
@@ -192,12 +192,13 @@ function viewEmployees() {
             r.role_name as Title,
             d.name as Department, 
             r.salary as Salary, 
-            CONCAT(m.first_name, ' ', m.last_name) as Manager
-        FROM employees AS e
+            (SELECT CONCAT(m.first_name, ' ', m.last_name)
+                FROM employees m WHERE m.id = e.manager_id) as Manager
+        FROM employees e
         JOIN roles r on r.id = e.role_id
         JOIN departments d ON d.id = r.department_id
-        LEFT JOIN employees m on m.manager_id = e.id
-        Order by r.id asc;`,     
+        
+        Order by r.id asc;`,
         function(err, res) {
         if (err) throw err
         console.log("")
@@ -220,11 +221,11 @@ function viewEmployees() {
             e.last_name as Last_Name, 
             r.role_name as Title,
             r.salary as Salary, 
-            CONCAT(m.first_name, ' ', m.last_name) as Manager
+            (SELECT CONCAT(m.first_name, ' ', m.last_name)
+                FROM employees m WHERE m.id = e.manager_id) as Manager
         FROM employees AS e
         JOIN roles r on r.id = e.role_id
         JOIN departments d ON d.id = r.department_id
-        LEFT JOIN employees m on m.manager_id = e.id
         Order by d.name asc;`,     
         function(err, res) {
         if (err) throw err
@@ -242,7 +243,8 @@ function viewEmployees() {
     function viewEmpByManager() {
         dbConnection.query(`
         SELECT 
-            CONCAT(m.first_name, ' ', m.last_name) as Manager,             
+            (SELECT CONCAT(m.first_name, ' ', m.last_name)
+                FROM employees m WHERE m.id = e.manager_id) as Manager,
             e.id as Employee_ID, 
             e.first_name as First_Name,
             e.last_name as Last_Name, 
@@ -252,7 +254,6 @@ function viewEmployees() {
         FROM employees AS e
         JOIN roles r on r.id = e.role_id
         JOIN departments d ON d.id = r.department_id
-        LEFT JOIN employees m on m.manager_id = e.id
         Order by Manager asc;`,     
         function(err, res) {
         if (err) throw err
@@ -324,6 +325,85 @@ function roleAdd() {
             console.table(res)
             viewAllRoles()
         });
+    });
+}
+
+async function employeeAdd() {
+    const [roles] = await dbConnection.promise().query(`SELECT * FROM roles;`)
+    const roleChoices = roles.map(({role_name, id}) => (
+        {name: role_name, value: id}
+    ));
+
+    const [managers] = await dbConnection.promise().query(`SELECT * FROM employees WHERE manager_id IS NULL;`)
+    const managerChoices = managers.map(({first_name, last_name, id}) => (
+        {name: first_name + " " + last_name, value: id}
+    ));
+    
+    inquirer.prompt([
+        {type: 'input',
+        name: 'newEmpFirstName',
+        message: 'What is the first name of the employee you need to add?'
+        },
+
+        {type: 'input',
+        name: 'newEmpLastName',
+        message: 'What is the last name of the employee you need to add?'
+        },
+
+        {type: 'list',
+        name: 'newEmpRole',
+        choices: roleChoices,
+        message: 'What is the role of the new employee?'
+        },
+
+        {type: 'list',
+        name: 'isSupervised',
+        choices: ['Yes', 'No'],
+        message: 'Is the new employee going to be supervised?'
+        },
+
+        // {type: 'list',
+        // name: 'newEmpManager',
+        // choices: managerChoices,
+        // message: 'Who is the manager of the new employee?',
+        // // when: (answer) => answer.isSupervised === 'Yes'
+        // }
+
+    ]).then((response)=> {
+        let newEmpFirstName = response.newEmpFirstName;
+        let newEmpLastName = response.newEmpLastName;
+        let newEmpRole = response.newEmpRole;
+        let isSupervised = response.isSupervised;
+        console.log(`New employee first name: `+ newEmpFirstName);
+        console.log(`New employee last name: `+ newEmpLastName);
+        console.log(`New employee role ID: `+ newEmpRole);
+        console.log(`Is the new employee supervised: ` + isSupervised);
+        if (isSupervised === 'No') {
+        dbConnection.query(`INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ("${newEmpFirstName}", "${newEmpLastName}", ${newEmpRole}, null);`)
+        // viewEmployees();
+        } else {
+            inquirer.prompt([
+                {type: 'list',
+                name: 'newEmpManager',
+                choices: managerChoices,
+                message: 'Who is the manager of the new employee?'
+                }
+            ]).then((response) => {
+                let newEmpManager = response.newEmpManager;
+                console.log(`New employee manager ID: `+ newEmpManager);
+                dbConnection.query(`INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ("${newEmpFirstName}", "${newEmpLastName}", ${newEmpRole}, ${newEmpManager});`)
+
+                // viewEmployees();
+            });    
+        }
+            console.log("")
+            console.log("***************************************")
+            console.log("*** NEW EMPLOYEE SUCCESSFULLY ADDED ***")
+            console.log("***************************************")
+            console.log("")
+            console.table(response)
+            viewEmployees()
+            
     });
 }
 
