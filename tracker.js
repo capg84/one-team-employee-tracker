@@ -268,6 +268,7 @@ function viewEmployees() {
     };
 };
 
+// departmentAdd fuction
 function departmentAdd() {
     inquirer.prompt([
         {type: 'input',
@@ -291,6 +292,7 @@ function departmentAdd() {
     });
 };
 
+// roleAdd function
 function roleAdd() {
     inquirer.prompt([
         {type: 'input',
@@ -328,6 +330,7 @@ function roleAdd() {
     });
 };
 
+// employeeAdd function
 async function employeeAdd() {
     // adding all available roles in an array
     const [roles] = await dbConnection.promise().query(`SELECT * FROM roles;`)
@@ -366,13 +369,6 @@ async function employeeAdd() {
         message: 'Is the new employee going to be supervised?'
         },
 
-        // {type: 'list',
-        // name: 'newEmpManager',
-        // choices: managerChoices,
-        // message: 'Who is the manager of the new employee?',
-        // // when: (answer) => answer.isSupervised === 'Yes'
-        // }
-
     ]).then((response)=> {
         let newEmpFirstName = response.newEmpFirstName;
         let newEmpLastName = response.newEmpLastName;
@@ -384,7 +380,7 @@ async function employeeAdd() {
         console.log(`Is the new employee supervised: ` + isSupervised);
         if (isSupervised === 'No') {
         dbConnection.query(`INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ("${newEmpFirstName}", "${newEmpLastName}", ${newEmpRole}, null);`)
-        // viewEmployees();
+        
         } else {
             inquirer.prompt([
                 {type: 'list',
@@ -396,8 +392,6 @@ async function employeeAdd() {
                 let newEmpManager = response.newEmpManager;
                 console.log(`New employee manager ID: `+ newEmpManager);
                 dbConnection.query(`INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ("${newEmpFirstName}", "${newEmpLastName}", ${newEmpRole}, ${newEmpManager});`)
-
-                // viewEmployees();
             });    
         }
             console.log("")
@@ -411,6 +405,7 @@ async function employeeAdd() {
     });
 };
 
+// updateEmployee function
 async function updateEmployee() {
     // adding all available roles in an array
     const [roles] = await dbConnection.promise().query(`SELECT * FROM roles;`)
@@ -477,7 +472,7 @@ async function updateEmployee() {
         }
     )
     
-    // function to run if first name to be update
+    // function to run if first name to be updated
     function updateEmployeeFirstName() {
         inquirer.prompt([
             {type: 'list',
@@ -511,7 +506,7 @@ async function updateEmployee() {
         }); 
     };
 
-    // function to run if last name to be update
+    // function to run if last name to be updated
     function updateEmployeeLastName() {
         inquirer.prompt([
             {type: 'list',
@@ -545,6 +540,7 @@ async function updateEmployee() {
         }); 
     };
 
+    //function to run if role to be updated
     function updateEmployeeRole() {
         inquirer.prompt([
             {type: 'list',
@@ -566,7 +562,7 @@ async function updateEmployee() {
             console.log(`The updated role: ` + updatedEmpRole);
             
             //update statement needs to be added
-            dbConnection.query(`UPDATE employees SET role_id = "${updatedEmpRole}" WHERE id = ${selectedEmployee};`)
+            dbConnection.query(`UPDATE employees SET role_id = ${updatedEmpRole} WHERE id = ${selectedEmployee};`)
             
                 console.log("")
                 console.log("**********************************************")
@@ -579,9 +575,50 @@ async function updateEmployee() {
         }); 
     };
 
-    //need to add updateEmployeeManager
-}
+    //function to be if manager to be updated
+    function updateEmployeeManager() {
+        inquirer.prompt([
+            {type: 'list',
+            name: 'selectedEmployee',
+            choices: employeeChoices,
+            message: 'Role of which employee needs to be updated?'
+            },
 
-
-// WHEN I choose to update an employee role
-// // THEN I am prompted to select an employee to update and their new role and this information is updated in the database
+            {type: 'list',
+            name: 'isSupervised',
+            choices: ['Yes', 'No'],
+            message: 'Is the new employee going to be supervised?'
+            },
+    
+        ]).then((response)=> {
+            let selectedEmployee = response.selectedEmployee;
+            let isSupervised = response.isSupervised;
+            let updatedEmpRole = response.updatedEmpRole;
+            console.log(`The employee to be updated: ` + selectedEmployee);
+            console.log(`The employee is going to be supervised: ` + isSupervised);
+            
+            if (isSupervised === "No") {
+                dbConnection.query(`UPDATE employees SET manager_id = null WHERE id = ${selectedEmployee};`)
+            } else {
+                inquirer.prompt([
+                    {type: 'list',
+                    name: 'updatedEmpManager',
+                    choices: managerChoices,
+                    message: 'Who is the updated manager of the employee?'
+                    }
+                ]).then((response)=> {
+                    let updatedEmpManager = response.updatedEmpManager;
+            
+                    dbConnection.query(`UPDATE employees SET manager_id = ${updatedEmpManager} WHERE id = ${selectedEmployee};`)
+                    })
+                }   
+                    console.log("")
+                    console.log("************************+++**********************")
+                    console.log("*** EMPLOYEE MANAGER ID UPDATED SUCCESSFULLY  ***")
+                    console.log("*************************************************")
+                    console.log("")
+                    console.table(response)
+                    viewEmployees()
+                });
+    };
+};
