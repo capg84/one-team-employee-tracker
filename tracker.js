@@ -27,7 +27,7 @@ function manageOneTeam() {
     inquirer.prompt ([
         {
         type: "list",
-        name: "action_selection",
+        name: "mainMenu",
         message: "Please select one option",
         choices: [
             "View all departments",
@@ -44,7 +44,7 @@ function manageOneTeam() {
         }
         ]).then(function(selection){
             // creating switch based on the selected action
-            switch(selection.action_selection) {
+            switch(selection.mainMenu) {
                 // viewAllDepartment function if "View all department" is selected
                 case "View all departments": 
                     viewAllDepartments();
@@ -326,15 +326,19 @@ function roleAdd() {
             viewAllRoles()
         });
     });
-}
+};
 
 async function employeeAdd() {
+    // adding all available roles in an array
     const [roles] = await dbConnection.promise().query(`SELECT * FROM roles;`)
+    // creating roles list
     const roleChoices = roles.map(({role_name, id}) => (
         {name: role_name, value: id}
     ));
 
+    // adding all available managers in an array
     const [managers] = await dbConnection.promise().query(`SELECT * FROM employees WHERE manager_id IS NULL;`)
+    // creating managers list
     const managerChoices = managers.map(({first_name, last_name, id}) => (
         {name: first_name + " " + last_name, value: id}
     ));
@@ -405,10 +409,179 @@ async function employeeAdd() {
             viewEmployees()
             
     });
+};
+
+async function updateEmployee() {
+    // adding all available roles in an array
+    const [roles] = await dbConnection.promise().query(`SELECT * FROM roles;`)
+    // creating roles list
+    const roleChoices = roles.map(({role_name, id}) => (
+        {name: role_name, value: id}
+    ));
+
+    // adding all available managers in an array
+    const [managers] = await dbConnection.promise().query(`SELECT * FROM employees WHERE manager_id IS NULL;`)
+    // creating managers list
+    const managerChoices = managers.map(({first_name, last_name, id}) => (
+        {name: first_name + " " + last_name, value: id}
+    ));
+
+    // adding all available employees in an array
+    const [employees] = await dbConnection.promise().query(`SELECT * FROM employees;`)
+    // creating managers list
+    const employeeChoices = employees.map(({first_name, last_name, id}) => (
+        {name: first_name + " " + last_name, value: id}
+    ));
+
+    inquirer.prompt ([
+        {
+        type: "list",
+        name: "updateEmployee",
+        message: "What information do you want to update?",
+        choices: [
+            "Update their first name",
+            "Update their last name",
+            "Update their job title",
+            "Update their manager information",
+            "Go back to main menu"
+            ]
+        }
+    ]).then(function(selection){
+        // creating switch based on the selected action
+        switch(selection.updateEmployee) {
+            // updateEmployeeFirstName function if "Update their first name" is selected
+            case "Update their first name": 
+                updateEmployeeFirstName();
+            break;
+
+            // updateEmployeeLastName function if "Update their last name" is selected
+            case "Update their last name": 
+                updateEmployeeLastName();
+            break;
+
+            // updateEmployeeRole function if "Update their job title" is selected
+            case "Update their job title": 
+                updateEmployeeRole();
+            break;
+
+            // updateEmployeeManager function if "Update their manager information" is selected
+            case "Update their manager information": 
+                updateEmployeeManager(); // need to be added
+            break;
+
+            // exit from the application
+            case "Go back to main menu":
+                manageOneTeam();
+            break;
+            }
+        }
+    )
+    
+    // function to run if first name to be update
+    function updateEmployeeFirstName() {
+        inquirer.prompt([
+            {type: 'list',
+            name: 'selectedEmployee',
+            choices: employeeChoices,
+            message: 'First name of which employee needs to be updated?'
+            },
+    
+            {type: 'input',
+            name: 'updatedFirstName',
+            message: 'What is the updated first name of the employee?'
+            },
+    
+        ]).then((response)=> {
+            let selectedEmployee = response.selectedEmployee;
+            let updatedFirstName = response.updatedFirstName;
+            console.log(`The employee to be updated: ` + selectedEmployee);
+            console.log(`The updated first name: ` + updatedFirstName);
+            
+            //update statement needs to be added
+            dbConnection.query(`UPDATE employees SET first_name = "${updatedFirstName}" WHERE id = ${selectedEmployee};`)
+            
+                console.log("")
+                console.log("*************************************************")
+                console.log("*** EMPLOYEE FIRST NAME UPDATED SUCCESSFULLY  ***")
+                console.log("*************************************************")
+                console.log("")
+                console.table(response)
+                viewEmployees()
+                
+        }); 
+    };
+
+    // function to run if last name to be update
+    function updateEmployeeLastName() {
+        inquirer.prompt([
+            {type: 'list',
+            name: 'selectedEmployee',
+            choices: employeeChoices,
+            message: 'Last name of which employee needs to be updated?'
+            },
+    
+            {type: 'input',
+            name: 'updatedLastName',
+            message: 'What is the updated last name of the employee?'
+            },
+    
+        ]).then((response)=> {
+            let selectedEmployee = response.selectedEmployee;
+            let updatedLastName = response.updatedFirstName;
+            console.log(`The employee to be updated: ` + selectedEmployee);
+            console.log(`The updated last name: ` + updatedLastName);
+            
+            //update statement needs to be added
+            dbConnection.query(`UPDATE employees SET last_name = "${updatedLastName}" WHERE id = ${selectedEmployee};`)
+            
+                console.log("")
+                console.log("************************************************")
+                console.log("*** EMPLOYEE LAST NAME UPDATED SUCCESSFULLY  ***")
+                console.log("************************************************")
+                console.log("")
+                console.table(response)
+                viewEmployees()
+                
+        }); 
+    };
+
+    function updateEmployeeRole() {
+        inquirer.prompt([
+            {type: 'list',
+            name: 'selectedEmployee',
+            choices: employeeChoices,
+            message: 'Role of which employee needs to be updated?'
+            },
+    
+            {type: 'list',
+            name: 'updatedEmpRole',
+            choices: roleChoices,
+            message: 'What is the updated role of the employee?'
+            },
+    
+        ]).then((response)=> {
+            let selectedEmployee = response.selectedEmployee;
+            let updatedEmpRole = response.updatedEmpRole;
+            console.log(`The employee to be updated: ` + selectedEmployee);
+            console.log(`The updated role: ` + updatedEmpRole);
+            
+            //update statement needs to be added
+            dbConnection.query(`UPDATE employees SET role_id = "${updatedEmpRole}" WHERE id = ${selectedEmployee};`)
+            
+                console.log("")
+                console.log("**********************************************")
+                console.log("*** EMPLOYEE ROLE ID UPDATED SUCCESSFULLY  ***")
+                console.log("**********************************************")
+                console.log("")
+                console.table(response)
+                viewEmployees()
+                
+        }); 
+    };
+
+    //need to add updateEmployeeManager
 }
 
 
-// WHEN I choose to add an employee
-// THEN I am prompted to enter the employee’s first name, last name, role, and manager, and that employee is added to the database
 // WHEN I choose to update an employee role
 // // THEN I am prompted to select an employee to update and their new role and this information is updated in the database
