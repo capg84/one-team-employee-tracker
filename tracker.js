@@ -75,14 +75,14 @@ function manageOneTeam() {
                     employeeAdd();
                 break;
 
-                // updateEmployee function if "Update an employee information" is selected
-                case "Update an employee information":
-                    updateEmployee();
-                break;
-
                 // viewSpend function if "View departmental spend on HR" is selected
                 case "View departmental spend on HR":
                     viewSpend();
+                break;
+
+                // updateEmployee function if "Update an employee information" is selected
+                case "Update an employee information":
+                    updateEmployee();
                 break;
 
                 // deleteInfo function if "Delete a department, role or employee" is selected
@@ -621,4 +621,29 @@ async function updateEmployee() {
                     viewEmployees()
                 });
     };
+};
+
+// viewSpend function
+function viewSpend() {
+    dbConnection.query(`
+    SELECT 
+        d.name AS Department,
+        COUNT(e.id) as Employees_in_Dept,
+        FORMAT(SUM(salary),2) as Total_Spend 
+    FROM employees e
+    JOIN roles r ON r.id = e.role_id
+    JOIN departments d ON d.id = r.department_id
+    GROUP BY d.name
+    ORDER by d.name ASC;
+    `,
+    function(err, res) {
+      if (err) throw err
+      console.log("")
+      console.log("******************************")
+      console.log("*** HR SPEND BY DEPARMENT  ***")
+      console.log("******************************")
+      console.log("")
+      console.table(res)
+      manageOneTeam()
+    });
 };
