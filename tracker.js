@@ -449,6 +449,14 @@ async function employeeAdd() {
         dbConnection.query(
           `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ("${newEmpFirstName}", "${newEmpLastName}", ${newEmpRole}, null);`
         );
+        console.clear();
+        console.log("");
+        console.log("***************************************");
+        console.log("*** NEW EMPLOYEE SUCCESSFULLY ADDED ***");
+        console.log("***************************************");
+        console.log("");
+        console.table(response);
+        viewEmployees();
       } else {
         inquirer
           .prompt([
